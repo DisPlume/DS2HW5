@@ -1,3 +1,5 @@
+//10720116 鄭宇傑 10720138 陳尚宏 請使用此GitHub版本機測
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -78,7 +80,9 @@ public:
 
     void DFS();
     void dijkstra(string);
-    void savedijkstra(string , string );
+    void savedijkstra(string, string );
+
+    bool fileexisted = false;
 
 };
 
@@ -99,7 +103,6 @@ bool compareBy_adjListNode_sid2(const adjListNode &a, const adjListNode &b) {
         } else {
             cout<<endl<<"FASLE"<<endl;
             return false;
-
         }
     */
 
@@ -156,6 +159,7 @@ void Graph::readBinary(string filename) {
     binfile.open(filename.c_str(),fstream::in|fstream::binary);
 
     if(binfile.is_open()) {
+        fileexisted = true;
         binfile.seekg(0,binfile.end);
         stNo=binfile.tellg()/sizeof(oneSt);
         nodecounts=stNo;
@@ -166,12 +170,13 @@ void Graph::readBinary(string filename) {
         for(int i=0; i<stNo; i++) {
             studentPair temp;
             binfile.read((char*)&oneSt,sizeof(oneSt));
-            cout<<"["<<i+1<<"]"<<oneSt.sid1<<","<<oneSt.sid2<<" ,"<<oneSt.wgt<<endl;
+            //cout<<"["<<i+1<<"]"<<oneSt.sid1<<","<<oneSt.sid2<<" ,"<<oneSt.wgt<<endl;
 
             aList.push_back(oneSt);
         }
     } else {
         cout<<"File not exist."<<endl;
+        fileexisted = false;
         return;
 
 
@@ -292,11 +297,8 @@ void Graph::createASJlist() {
             cout<<"NOT EXIST"<<endl;
             adjList tempadjList;
             tempadjList.sid1=inputsid2;
-
             adjL.push_back(tempadjList); //create new graph
         }
-
-
     }
     */
 
@@ -330,7 +332,6 @@ void Graph::createASJlist_wgt() {
 
         /*for(int countf=1; iter-> wgt>inputweight; countf++,iter++) {
             cout<<"skiped: "<<iter-> wgt<<endl;
-
         }*/
         if(iter-> wgt<=inputweight) {
 
@@ -422,11 +423,8 @@ void Graph::createASJlist_wgt() {
             cout<<"NOT EXIST"<<endl;
             adjList tempadjList;
             tempadjList.sid1=inputsid2;
-
             adjL.push_back(tempadjList); //create new graph
         }
-
-
     }
     */
 
@@ -460,7 +458,7 @@ void Graph::saveFileASJlist(string outputfilename) {
     vector<adjList>::iterator iter = adjL.begin();
     for(iter, c = 1; iter!= adjL.end(); iter++,c++) {
         string tempstring1 = iter->sid1;
-        cout<<tempstring1<<endl;
+        //cout<<tempstring1<<endl;
         fprintf(file, "[%d] %s:\n", c, tempstring1.c_str());
 
 
@@ -637,10 +635,7 @@ void Graph::dijkstra(string inputid) {
     }//while
     /*
     for(int iii=0;iii<adjL.size();iii++){
-
         cout<<endl<<adjL.at(iii).sid1<<": "<<adjL.at(iii).inf<<endl;
-
-
     }
     */
     sort(adjL.begin(), adjL.end(),compareBy_adjList_inf ); //sorting graph
@@ -655,13 +650,13 @@ void Graph::savedijkstra(string outputfilename, string inputidd) {
 
     outputfilename = "pairs" + outputfilename + ".ds";
     FILE* file = NULL;
-    file = fopen( outputfilename.c_str(), "r+");
+    file = fopen( outputfilename.c_str(), "a");
 
     int ccccc = 1;
-    fprintf(file, "origin: %s\n", inputidd.c_str());
-    for(int iii=0;iii<adjL.size();iii++){
+    fprintf(file, "\norigin: %s\n", inputidd.c_str());
+    for(int iii=0; iii<adjL.size(); iii++) {
 
-        if(!(adjL.at(iii).inf==99999||adjL.at(iii).inf==0)){
+        if(!(adjL.at(iii).inf==99999||adjL.at(iii).inf==0)) {
             fprintf(file, "(%d) %s, %f\t", ccccc, adjL.at(iii).sid1.c_str(),adjL.at(iii).inf);
             ccccc++;
 
@@ -675,23 +670,31 @@ void Graph::savedijkstra(string outputfilename, string inputidd) {
 
 }
 
+bool check0=false;
+bool check1=false;
 
+Graph globtemp;
+string globfilename;
 
-
-
-
-
-
-
-void newmode1() {
+void newmode0() {
+    check0=true;
+    check1=true;
     Graph test;
 
     string filename;
-    cin >> filename;
 
 
-    string readfilename="pairs"+filename+".bin";
-    test.readBinary(readfilename);
+
+    while(test.fileexisted==false) {
+        cout<<endl<<"Input a file number:"<<endl;
+        cin >> filename;
+        string readfilename="pairs"+filename+".bin";
+        test.readBinary(readfilename);
+
+    }
+    test.fileexisted = false;
+
+    cout<<endl<<"Input a real number in (0,1]:"<<endl;
     cin>>test.inputweight;
 
     test.createASJlist_wgt();
@@ -708,15 +711,34 @@ void newmode1() {
     test.DFS();
     test.saveDFS(filename);
 
-
-
+    globtemp=test;
+    globfilename=filename;
 
 }
 
-void newmode2() {
-    Graph test;
 
-    string filename;
+void newmode1() {
+
+    check1=true;
+    if(check0==false) {
+        cout<<"There is no graph and choose 0 first."<<endl;
+    }
+
+}
+
+
+void newmode2() {
+    if(check1==false) {
+        cout<<"### Choose 1 to find connected components. ###"<<endl;
+    }
+
+    Graph test;
+    test = globtemp;
+
+
+
+    string filename = globfilename;
+    /*
     cin >> filename;
 
 
@@ -733,15 +755,30 @@ void newmode2() {
 
     filename = filename + "_" + s;
 
-    test.saveFileASJlist(filename);
-
-    string inputidd;
-    cin>>inputidd;
-    test.dijkstra(inputidd);
-
-    test.savedijkstra(filename,inputidd);
+    test.saveFileASJlist(filename);*/
 
 
+    for(int i = 0; i<test.adjL.size(); i++){
+
+        cout<<test.adjL.at(i).sid1<<"\t";
+
+
+
+    }
+
+
+    string inputidd="-1";
+    while(true) {
+        cout<<endl<<"Input a student ID [0: exit]"<<endl;
+        cin>>inputidd;
+        if(inputidd=="0")
+            break;
+        test.dijkstra(inputidd);
+        test.savedijkstra(filename,inputidd);
+
+
+
+    }
 
 
 }
@@ -750,28 +787,28 @@ int main(void) {
 
     do {
 
-        cout << endl << "**** Graph data manipulation ****";
-        cout << endl << "* 0. QUIT                       *";
-        cout << endl << "* 1. Build adjacency lists      *";
-        cout << endl << "* 2. Compute connection counts  *";
-        cout << endl << "*********************************";
-        cout << endl << "Input a choice(0, 1, 2): ";
+        cout << endl << "**** Graph data application ***********";
+        cout << endl << "* 1.  Create adjacency lists &        *";
+        cout << endl << "*     Build connected components      *";
+        cout << endl << "* 2.  Find shortest paths by Dijkstra *";
+        cout << endl << "***************************************";
+        cout << endl << "Input a choice(1, 2)";
 
         int command ;
         cin >> command;
-        if ((command == 1) || (command == 2)|| (command == 3)) {
-            if (command == 1) {
-                newmode1();
+        if ((command == 0) || (command == 1)|| (command == 2)) {
+            if (command == 0) {
+                //newmode0();
+
+            }
+            if (command==1) {
+
+                newmode0();
 
             }
             if (command==2) {
 
                 newmode2();
-
-            }
-            if (command==3) {
-
-                //newmode3();
 
             }
         } else if (!command)
@@ -782,4 +819,3 @@ int main(void) {
     system("pause");
     return 0;
 }
-
